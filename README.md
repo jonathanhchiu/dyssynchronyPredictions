@@ -10,8 +10,8 @@ a LSTM recurrent neural network implemented in TensorFlow.
 * 3 values per timestep (spatial coordinates)
 
 ### Run:
-The program runs one single training step, with a batch of 20, using an Adam optimizer. Actual loss and 
-accuracy may vary. 
+The program runs one single training step, with a batch of 20, as proof of concept. Actual loss and 
+accuracy may vary. I will continue to develop the program to fully train the network with a more complete dataset.
 ``` 
 >>> git clone https://github.com/jonathanhchiu/dyssynchronyPredictions.git
 >>> virtualenv env
