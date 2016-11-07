@@ -2,7 +2,7 @@
 
 ### Goal: 
 Using VCG simulations generated from Continuity, classify the corresponding dyssynchrony index, using
-a LSTM recurrent neural network implemented in TensorFlow
+a LSTM recurrent neural network implemented in TensorFlow.
 
 ### Dataset:
 * 608 Simulations (More to come)
@@ -13,7 +13,7 @@ a LSTM recurrent neural network implemented in TensorFlow
 The program runs one single training step, with a batch of 20, using an Adam optimizer. Actual loss and 
 accuracy may vary. 
 ``` 
->>> git clone https://github.com/jonathanhchiu/dyssynchrony_predictions.git
+>>> git clone https://github.com/jonathanhchiu/dyssynchronyPredictions.git
 >>> virtualenv env
 >>> source env/bin/activate
 >>> pip install -r requirements.txt
