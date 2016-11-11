@@ -1,108 +1,29 @@
 from __future__ import print_function
-import tensorflow as tf
-from tensorflow.python.ops import rnn, rnn_cell
-import numpy as np
+import tensorflow as tf 
+import numpy as np 
+import math
 
 from vcg import VCG
+import ops 
+
+
+# Network Hyperparameters and Dimensions
+# ===========================================================================
 
 # Parameters
 learning_rate = 0.1
-training_iters = 1500
-batch_size = 20
-display_step = 100
+training_iters = 50
+batch_size = 32
+gradient_norm_threshold = 0.001
 
 # Network Parameters
 num_input = 3
 num_steps = 120
-num_hidden = 7
+num_hidden = 10
 num_classes = 5
 
+logs_path='data/'
 
-
-def inference(sequence, weights, biases, num_hidden):
-    """
-    Forward propagation on LSTM neural network with linear activation.
-
-    Args:
-    sequence: sequence with (x, y, z) at each time step for 120 time steps.
-    weights: dimensions (num_hidden x num_classes)
-    biases: dimensions (num_classes x 1)
-
-    Return:
-    Output of linear classification, dimension (batch_size x num_classes)
-    """
-
-    # Define a lstm cell with tensorflow
-    cell = rnn_cell.BasicLSTMCell(num_hidden, forget_bias=1.0)
-
-    # Get lstm cell output
-    outputs, states = rnn.dynamic_rnn(cell, sequence, dtype=tf.float32)
-
-    # Permuting batch_size and num_steps
-    outputs = tf.transpose(outputs, [1, 0, 2])
-
-    # Linear activation on last output, using rnn inner loop last output
-    linear_activation = tf.matmul(outputs[-1], weights) + biases
-    return linear_activation
-
-
-
-def loss(logit, target):
-    """
-    Find the average loss in a batch with cross entropy. First applies
-    softmax on logits (unscaled values) to create a probability distribution,
-    then use cross entropy to find the loss.
-
-    Args:
-    logit: unscaled values, output of inference
-    target: correct probability distribution (one hot vector)
-
-    Return:
-    tensorflow operation for average loss, what we are optimizing to reduce.
-    """
-
-    # Define loss and optimizer
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logit, target))
-    return cost 
-
-
-
-def optimize(loss, learning_rate):
-    """
-    Use an Adam optimizer to reduce the cost with a given learning rate.
-
-    Args:
-    loss: output of loss function, the cross entropy loss
-    learning_rate: how fast we want to change our weights
-
-    Return: 
-    tensorflow operation to optimize loss
-    """
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
-    return optimizer 
-
-
-
-def accuracy(logit, target):
-    """
-    Determine the percentage accuracy of the network.
-
-    Args:
-    logit: unscaled values that the model predicted, output of inference
-    target: correct probability distribution, one hot vector
-
-    Return:
-    accuracy as a percentage
-    """
-
-    # Grab the highest value from each row and compare to target
-    correct = tf.equal(tf.argmax(logit, 1), tf.argmax(target, 1))
-
-    # Cast boolean values to float and average
-    accuracy = tf.reduce_mean(tf.cast(correct, tf.float32))
-
-    # return average accuracy
-    return accuracy 
 
 # Initialize Placeholders and Variables
 # ===========================================================================
@@ -123,8 +44,15 @@ target = tf.placeholder(
             )
 
 # Declare weights used for linear activation on output of network
-weights = tf.Variable(tf.random_normal([num_hidden, num_classes]))
-biases = tf.Variable(tf.random_normal([num_classes]))
+weights = tf.Variable(
+            tf.truncated_normal(
+                shape=[num_hidden, num_classes],
+                stddev= 1.0 / math.sqrt(float(num_classes))
+            )
+        )
+biases = tf.Variable(
+            tf.zeros([num_classes])
+        )
 
 
 
@@ -134,48 +62,106 @@ biases = tf.Variable(tf.random_normal([num_classes]))
 # Assigns values for each example across all classes corresponding to 
 # likelihood that the sequence belongs to that class (logits are unscaled
 # values, not a probability distribution)
-logit = inference(sequence, weights, biases, num_hidden)
+logit = ops.inference(sequence, weights, biases, num_hidden)
 
-# Initialize tensorflow operations to train network
-loss = loss(logit, target)                      # Loss function
-optimizer = optimize(loss, learning_rate)       # Update weights
-accuracy = accuracy(logit, target)              # Determine accuracy
+# Initialize tensorflow operations to train network:
+# Loss function: cross entropy
+loss = ops.loss(logit, target)
 
-# Initializing the variables
-init = tf.initialize_all_variables()
+# Add a scalar summary for the snapshot loss.
+tf.scalar_summary(loss.op.name, loss)
 
+# Gradient calculations:
+# Initialize gradient descent optimizer
+optimizer = ops.optimizer(learning_rate)
+
+# Step 1: Calculate gradient
+gradients = ops.calc_gradient(optimizer, loss)
+
+# Step 2: Calculate gradient norm for stopping criteria
+gradient_norm = ops.gradient_norm(gradients)
+
+# Step 3: Apply gradients and update model
+training_step = ops.apply_gradient(gradients, optimizer)
+
+# Post training: Determine accuracy
+accuracy = ops.accuracy(logit, target)
+
+
+
+# Setup Tensorboard
+# ===========================================================================
+writer = tf.train.SummaryWriter(logs_path, graph=tf.get_default_graph())
+
+# Keep track of loss
+tf.scalar_summary("Loss", loss)
+summary_op = tf.merge_all_summaries()
 
 
 # Run TensorFlow Session
 # ===========================================================================
-# Launch the session to perform ONE training step as a test
+
+# Initializing the variables
+init = tf.initialize_all_variables()
+
 with tf.Session() as sess:
     sess.run(init)
     step = 1
 
-    # Grab the first batch
-    batch_x, batch_y = data_sets.train.next_batch(batch_size)
+    # Grab the entire validation set 
+    valid_x = data_sets.validation.vcg 
+    valid_y = data_sets.validation.dyssync 
 
-    # Evaluate loss before any training
-    print("Loss (before training): %4f." % sess.run(
+    # Train the network 
+    for example in range(training_iters):
+
+        # Grab a batch and run one training step
+        batch_x, batch_y = data_sets.train.next_batch(batch_size)
+        _, summary = sess.run(
+                        [training_step, summary_op], 
+                        feed_dict={sequence: batch_x, target: batch_y})
+
+        # Record loss for each step
+        writer.add_summary(summary, step)
+
+        # Check if we have overfitted every 50th iteration
+        if step % 50 == 0:
+
+            # Calculate the gradient norm
+            norm = sess.run(gradient_norm, feed_dict={sequence: valid_x, target: valid_y})
+
+            # Cheeck if it is above certain threshold 
+            if norm < gradient_norm_threshold:
+                print("Training Finished.")
+                break
+
+        # Output loss for every 10th iteration
+        if step % 10 == 0:
+
+            # Evaluate loss after one training step
+            print("Loss (Iteration %d): %4f." % (step, sess.run(
                     loss, 
-                    feed_dict={sequence: batch_x, target: batch_y}))
+                    feed_dict={sequence: batch_x, target: batch_y})))
+
+        step+=1
+
 
     # Determine accuracy
+    train_x = data_sets.train.vcg 
+    train_y = data_sets.train.dyssync 
+
     print("Training Accuracy: %2f" % sess.run(
                     accuracy, 
-                    feed_dict={sequence: batch_x, target: batch_y}))
+                    feed_dict={sequence: train_x, target: train_y}))
 
-    # Run one training step
-    sess.run(optimizer, feed_dict={sequence: batch_x, target: batch_y})
-
-    # Evaluate loss after one training step
-    print("Loss (after training): %4f." % sess.run(
-                    loss, 
-                    feed_dict={sequence: batch_x, target: batch_y}))
-
-    # Determine accuracy
-    print("Training Accuracy: %2f" % sess.run(
+    print("Validation Accuracy: %2f" % sess.run(
                     accuracy, 
-                    feed_dict={sequence: batch_x, target: batch_y}))
+                    feed_dict={sequence: valid_x, target: valid_y}))
+
+    test_x = data_sets.test.vcg 
+    test_y = data_sets.test.dyssync 
+
+    print("Testing Accuracy: %2f" % sess.run(
+                    accuracy, 
+                    feed_dict={sequence: test_x, target: test_y}))
 
