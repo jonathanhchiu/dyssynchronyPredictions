@@ -26,6 +26,8 @@ Loss (Iteration 50): 1.316194.
 Training Accuracy: 0.414835
 Validation Accuracy: 0.308333
 Testing Accuracy: 0.333333
+
 >>> tensorboard --logdir=data/
 Starting TensorBoard 29 on port 6006
+
 ```
