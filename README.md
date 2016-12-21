@@ -17,7 +17,7 @@ This repo depends on TensorFlow and is written in a iPythonNotebook (Jupyter).
 This repo contains two iPython notebooks: ```dataset_wrapper.ipynb``` and ```dyssync_predictions.ipynb```. The first is to document the process and reasoning behind the dataset wrapper provided (```dataset.py```). The second contains the setup and training of the neural network.
 
 ## Dataset Dimensions:
-We provide a (very) samll dataset in the interest of reducing computation time, as we are simply trying to provide proof of concept. Below are the dimensions of the dataset.
+We provide a (very) small dataset in the interest of reducing computation time, as we are simply trying to provide proof of concept. Below are the dimensions of the dataset.
 * 608 simulated VCGs
 * maximum of 170 timesteps  
 * 3 values per timestep ```(x, y, z)``` coordinates of the head of the vector
