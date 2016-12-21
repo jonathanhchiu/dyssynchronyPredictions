@@ -21,7 +21,7 @@ We provide a (very) samll dataset in the interest of reducing computation time, 
 ## Files:
 This repo contains two iPython notebooks: ```dataset_wrapper.ipynb``` and ```dyssync_predictions.ipynb```. The first is to document the process and reasoning behind the dataset wrapper provided (```dataset.py```). The second contains the setup and training of the neural network.
 
-### Run:
+## Run:
 This repo depends on TensorFlow and is written in a iPythonNotebook (Jupyter).
 
 ``` 
