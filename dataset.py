@@ -11,11 +11,17 @@ class Dataset():
 		vcg_length: column vector containing VCG lengths
 		dyssync: 
 		"""
-		self.vcg = vcg
-		self.vcg_length = vcg_length
-		self.target = target
+		
+		# Get the number of examples
+		self.num_examples = len(vcg)
+
+		# Create a randomize the examples
+		self.randomize = np.random.permutation(self.num_examples)
+
+		self.vcg = vcg[self.randomize]
+		self.vcg_length = vcg_length[self.randomize]
+		self.target = target[self.randomize]
 		self.index = 0
-		self.num_examples = len(self.vcg)
 
 	def next_batch(self):
 		"""
@@ -56,8 +62,8 @@ class Patient():
 		
 		We fixed the set sizes to be as follows (1 batch = 32 examples): 
 		Training set: 416 examples, 13 batches (~68%)
-		Validation set: 96 examples, 2 batches (~16%)
-		Testing set: 96 examples, 2 batches (~16%)
+		Validation set: 96 examples, 3 batches (~16%)
+		Testing set: 96 examples, 3 batches (~16%)
 
 		We have 608 examples total. 
 		

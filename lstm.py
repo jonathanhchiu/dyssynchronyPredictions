@@ -12,7 +12,7 @@ import ops
 
 # Parameters
 learning_rate = 0.1
-training_iters = 50
+training_iters = 60
 batch_size = 32
 gradient_norm_threshold = 0.001
 
