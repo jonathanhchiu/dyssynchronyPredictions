@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from math import floor, ceil
 
 class Dataset():
@@ -7,11 +7,11 @@ class Dataset():
 		Initialize container to hold numpy matrices.
 
 		Params:
-		vcg: 3D matrix containing VCG 
+		vcg: 3D matrix containing VCG
 		vcg_length: column vector containing VCG lengths
-		dyssync: 
+		dyssync:
 		"""
-		
+
 		# Get the number of examples
 		self.num_examples = len(vcg)
 
@@ -30,7 +30,7 @@ class Dataset():
 		Return:
 		batch containing "batch_size" number of examples
 		"""
-		batch_size = 32
+		batch_size = 55
 
 		# Determine bounds of batch
 		begin = self.index
@@ -43,81 +43,72 @@ class Dataset():
 
 		# Update index: middle of dataset
 		else:
-			self.index = end 
+			self.index = end
 
 		return [
-			self.vcg[begin:end], 
-			self.vcg_length[begin:end], 
+			self.vcg[begin:end],
+			self.vcg_length[begin:end],
 			self.target[begin:end]
 		]
 
 
 
 class Patient():
-	
+
 	def __init__(self, vcg_file, vcg_length_file, target_file):
 		"""
 		Read in the VCG matrix, VCG length vector, and dyssynchrony index vector,
-		and define the sizes of the training, validation, and test sets.
-		
-		We fixed the set sizes to be as follows (1 batch = 32 examples): 
-		Training set: 416 examples, 13 batches (~68%)
-		Validation set: 96 examples, 3 batches (~16%)
-		Testing set: 96 examples, 3 batches (~16%)
+		and define the sizes of the training and test sets.
 
-		We have 608 examples total. 
-		
+		1 batch = 55 examples
+		1 set of 1210 training examples = 22 total batches
+		Training set: 990 examples, 18 batches (81.18%)
+		Testing set: 220 examples, 4 batches (18.18%)
+
+		Training set: 1045 examples, 19 batches (86.36%)
+		Testing set: 165 examples, 3 batches (13.64%)
+
 		Params:
 		vcg_file:
 		vcg_length_file:
 		dyssync_file:
 		"""
-				
+
 		# Read in three numpy files
 		vcg = np.load(vcg_file)
 		vcg_length = np.load(vcg_length_file)
 		target = np.load(target_file)
 
-		# Determine number of examples: should be 608
+		# Determine number of examples: should be 1210
 		num_examples = len(vcg)
-		assert num_examples == 608, "Insufficient number of examples, need 608."
+		# assert num_examples == 608, "Insufficient number of examples, need 608."
+		assert num_examples == 1210, "Insufficient number of examples, need 1210."
 
 		# Determine cutoff indices to split the dataset
-		train_index = 416
-		validate_index = 512
-		test_index = 608
+		train_index = 990
+		test_index = 1210
 
 		# Split dataset: VCG
 		train_vcg = vcg[:train_index]
-		validate_vcg = vcg[train_index:validate_index]
-		test_vcg = vcg[validate_index:test_index]
+		test_vcg = vcg[train_index:test_index]
 
 		# VCG sequence lengths
 		train_vcg_length = vcg_length[:train_index]
-		validate_vcg_length = vcg_length[train_index:validate_index]
-		test_vcg_length = vcg_length[validate_index:test_index]
+		test_vcg_length = vcg_length[train_index:test_index]
 
 		# Targets
 		train_target = target[:train_index]
-		validate_target = target[train_index:validate_index]
-		test_target = target[validate_index:test_index]
+		test_target = target[train_index:test_index]
 
 		# Wrap numpy matrices as dataset classes
 		self.train = Dataset(
-			vcg=train_vcg, 
-			vcg_length=train_vcg_length, 
+			vcg=train_vcg,
+			vcg_length=train_vcg_length,
 			target=train_target
 		)
 
-		self.validate = Dataset(
-			vcg=validate_vcg, 
-			vcg_length=validate_vcg_length, 
-			target=validate_target
-		)
-
 		self.test = Dataset(
-			vcg=test_vcg, 
-			vcg_length=test_vcg_length, 
+			vcg=test_vcg,
+			vcg_length=test_vcg_length,
 			target=test_target
 		)
-
