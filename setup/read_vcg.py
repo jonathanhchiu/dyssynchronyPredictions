@@ -4,13 +4,14 @@ import numpy as np
 vcg_length = []
 vcg = []
 
-for index in range(1210):
+for index in range(1817):
 
 	# Create filename with zero pad
 	filename = 'version{:04d}.txt'.format(index + 1)
 
 	# Read in the text file as numpy matrix
 	x = np.loadtxt(filename, delimiter="\t")
+	print x.shape
 	vcg.append(x)
 
 	# Grab and store the vcg length
