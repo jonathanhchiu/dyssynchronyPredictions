@@ -1,6 +1,6 @@
 import os, sys
 
-for index in range(1211, 1818):
+for index in range(1818, 2426):
 	f = 'version{:04d}.txt'.format(index)
 	print f
 	readFile = open(f)
