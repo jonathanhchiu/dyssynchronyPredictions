@@ -30,7 +30,7 @@ class Dataset():
 		Return:
 		batch containing "batch_size" number of examples
 		"""
-		batch_size = 25
+		batch_size = 23
 
 		# Determine bounds of batch
 		begin = self.index
@@ -60,10 +60,10 @@ class Patient():
 		Read in the VCG matrix, VCG length vector, and dyssynchrony index vector,
 		and define the sizes of the training and test sets.
 
-		1 batch = 25 examples
-		1 set of 2425 training examples = 97 total batches
-		Training set: 1950 examples, 78 batches (~80%)
-		Testing set: 475 examples, 19 batches (~20%)
+		1 batch = 23 examples
+		1 set of 1817 training examples = 79 total batches
+		Training set: 1472 examples, 64 batches (~80%)
+		Testing set: 345 examples, 15 batches (~20%)
 
 		Params:
 		vcg_file:
@@ -79,11 +79,11 @@ class Patient():
 		# Determine number of examples: should be 1210
 		num_examples = len(vcg)
 		# assert num_examples == 608, "Insufficient number of examples, need 608."
-		assert num_examples == 2425, "Insufficient number of examples, need 2425."
+		assert num_examples == 1817, "Insufficient number of examples, need 2425."
 
 		# Determine cutoff indices to split the dataset
-		train_index = 1950
-		test_index = 2425
+		train_index = 1472
+		test_index = 1817
 
 		# Split dataset: VCG
 		train_vcg = vcg[:train_index]

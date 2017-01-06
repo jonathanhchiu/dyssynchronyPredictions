@@ -4,7 +4,7 @@ import numpy as np
 vcg_length = []
 vcg = []
 
-for index in range(2425):
+for index in range(1817):
 
 	# Create filename with zero pad
 	filename = 'version{:04d}.txt'.format(index + 1)
